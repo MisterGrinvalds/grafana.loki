@@ -321,9 +321,10 @@ func (c *Context) executePointersScan(ctx context.Context, node *physical.Pointe
 
 	return newLazyPipeline(func(ctx context.Context, _ []Pipeline) Pipeline {
 		pipeline, err := newScanPointersPipeline(ctx, scanPointersOptions{
-			metastore: c.metastore,
-			location:  string(node.Location),
-			req:       req,
+			metastore:     c.metastore,
+			location:      string(node.Location),
+			req:           req,
+			prefetchBytes: c.prefetchBytes,
 		})
 		if err != nil {
 			return errorPipeline(ctx, err)
