@@ -457,6 +457,8 @@ func (r *RowReader) init(ctx context.Context) error {
 
 	if err := r.initDownloader(ctx); err != nil {
 		return err
+	} else if err := r.dl.Prefetch(ctx); err != nil {
+		return fmt.Errorf("prefetching pages: %w", err)
 	}
 
 	if r.inner == nil {
