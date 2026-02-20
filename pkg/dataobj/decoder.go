@@ -30,7 +30,7 @@ func (d *decoder) Metadata(ctx context.Context) (*filemd.Metadata, error) {
 	buf := bufpool.Get(int(prefetchBytes))
 	defer bufpool.Put(buf)
 
-	g, _ := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	// We launch a separate goroutine to cache the object size in the background
 	// as we read the header.
@@ -39,7 +39,7 @@ func (d *decoder) Metadata(ctx context.Context) (*filemd.Metadata, error) {
 	// allows [Object.Size] to work.
 	if d.size == 0 {
 		g.Go(func() error {
-			if _, err := d.objectSize(ctx); err != nil {
+			if _, err := d.objectSize(gctx); err != nil {
 				return fmt.Errorf("fetching object size: %w", err)
 			}
 			return nil
@@ -47,7 +47,7 @@ func (d *decoder) Metadata(ctx context.Context) (*filemd.Metadata, error) {
 	}
 
 	g.Go(func() error {
-		if err := d.readFirstBytes(ctx, prefetchBytes, buf); err != nil {
+		if err := d.readFirstBytes(gctx, prefetchBytes, buf); err != nil {
 			return fmt.Errorf("reading first %d bytes: %w", prefetchBytes, err)
 		}
 		return nil
