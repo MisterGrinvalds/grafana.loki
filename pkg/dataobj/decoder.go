@@ -13,16 +13,21 @@ import (
 	"github.com/grafana/loki/v3/pkg/dataobj/internal/util/bufpool"
 )
 
-const optimisticReadBytes = 16 * 1024
+const defaultPrefetchBytes int64 = 16 * 1024
 
 type decoder struct {
-	rr       rangeReader
-	size     int64
-	startOff int64
+	rr            rangeReader
+	size          int64
+	startOff      int64
+	prefetchBytes int64
+
+	prefetchedRangeReader rangeReader
 }
 
 func (d *decoder) Metadata(ctx context.Context) (*filemd.Metadata, error) {
-	buf := bufpool.Get(int(optimisticReadBytes))
+	prefetchBytes := d.effectivePrefetchBytes()
+
+	buf := bufpool.Get(int(prefetchBytes))
 	defer bufpool.Put(buf)
 
 	g, _ := errgroup.WithContext(ctx)
@@ -42,8 +47,8 @@ func (d *decoder) Metadata(ctx context.Context) (*filemd.Metadata, error) {
 	}
 
 	g.Go(func() error {
-		if err := d.readFirstBytes(ctx, optimisticReadBytes, buf); err != nil {
-			return fmt.Errorf("reading first %d bytes: %w", optimisticReadBytes, err)
+		if err := d.readFirstBytes(ctx, prefetchBytes, buf); err != nil {
+			return fmt.Errorf("reading first %d bytes: %w", prefetchBytes, err)
 		}
 		return nil
 	})
@@ -51,6 +56,8 @@ func (d *decoder) Metadata(ctx context.Context) (*filemd.Metadata, error) {
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
+
+	d.setPrefetchedBytes(0, buf.Bytes())
 
 	header, err := d.header(buf)
 	if err != nil && errors.Is(err, errLegacyMagic) {
@@ -101,13 +108,14 @@ func (d *decoder) legacyMetadata(ctx context.Context) (*filemd.Metadata, error) 
 		return nil, fmt.Errorf("reading object size: %w", err)
 	}
 
-	readSize := min(objectSize, optimisticReadBytes)
+	readSize := min(objectSize, d.effectivePrefetchBytes())
 	buf := bufpool.Get(int(readSize))
 	defer bufpool.Put(buf)
 
 	if err := d.readLastBytes(ctx, readSize, buf); err != nil {
 		return nil, fmt.Errorf("reading last bytes: %w", err)
 	}
+	d.setPrefetchedBytes(objectSize-readSize, buf.Bytes())
 
 	tailer, err := d.tailer(ctx, buf)
 	if err != nil {
@@ -205,14 +213,39 @@ func (d *decoder) tailer(ctx context.Context, tailData *bytes.Buffer) (tailer, e
 }
 
 func (d *decoder) SectionReader(metadata *filemd.Metadata, section *filemd.SectionInfo, extensionData []byte) SectionReader {
+	rr := d.rr
+	if d.prefetchedRangeReader != nil {
+		rr = d.prefetchedRangeReader
+	}
+
 	return &sectionReader{
-		rr:  d.rr,
+		rr:  rr,
 		md:  metadata,
 		sec: section,
 
 		startOff: d.startOff,
 
 		extensionData: extensionData,
+	}
+}
+
+func (d *decoder) effectivePrefetchBytes() int64 {
+	if d.prefetchBytes <= 0 {
+		return defaultPrefetchBytes
+	}
+	return d.prefetchBytes
+}
+
+func (d *decoder) setPrefetchedBytes(offset int64, data []byte) {
+	if len(data) == 0 {
+		return
+	}
+
+	copied := append([]byte(nil), data...)
+	d.prefetchedRangeReader = &prefetchedRangeReader{
+		inner:          d.rr,
+		prefetchOffset: offset,
+		prefetched:     copied,
 	}
 }
 
