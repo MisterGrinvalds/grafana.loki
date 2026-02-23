@@ -1,5 +1,32 @@
 ## Main
 
+## [0.9.1](https://github.com/grafana/loki/compare/operator/v0.9.0...operator/v0.9.1) (2026-02-23)
+
+
+### Features
+
+* **operator:** add option to disable ingress ([#19382](https://github.com/grafana/loki/issues/19382)) ([9dc71a6](https://github.com/grafana/loki/commit/9dc71a642569b64b6c21b23f23671b0f18f6285d))
+* **operator:** Update Loki operand to v3.6.5 ([#20696](https://github.com/grafana/loki/issues/20696)) ([d81e977](https://github.com/grafana/loki/commit/d81e977f1ea6004b32ddd1a05af19fe034bdc126))
+* Update to go 1.25.7 ([#20694](https://github.com/grafana/loki/issues/20694)) ([3a6ba0d](https://github.com/grafana/loki/commit/3a6ba0d63c79297ca9c343186711d51aba83e9f0))
+
+
+### Bug Fixes
+
+* **operator:** add additional port to networkpolicy when using Swift ([#20129](https://github.com/grafana/loki/issues/20129)) ([1180fff](https://github.com/grafana/loki/commit/1180fffe946aa699ae0c47c76d19586474166477))
+* **operator:** always generate full set of condition metrics for each LokiStack ([#19509](https://github.com/grafana/loki/issues/19509)) ([973bb71](https://github.com/grafana/loki/commit/973bb71d6ea4f579d980d5486fb78e4a30483015))
+* **operator:** change leader-election parameters ([#19707](https://github.com/grafana/loki/issues/19707)) ([86068cf](https://github.com/grafana/loki/commit/86068cfb6c9c221dbb3878bdd5e86a53b6ce2caa))
+* **operator:** configure to extract selectors to allow fine-grained auth in openshift-network mode ([#19958](https://github.com/grafana/loki/issues/19958)) ([0ba8573](https://github.com/grafana/loki/commit/0ba85736ea9b7ac6263e1eb8af8742532f623e41))
+* **operator:** dynamically configure networkpolicy when a Kubernetes service is used for object storage ([#20111](https://github.com/grafana/loki/issues/20111)) ([e8a998b](https://github.com/grafana/loki/commit/e8a998b86e69a7203ace82199d4f7b49d122ab82))
+* **operator:** Increase distributor-ingester timeout from 1s to 5s ([#20471](https://github.com/grafana/loki/issues/20471)) ([7056ec4](https://github.com/grafana/loki/commit/7056ec41ce2ce2bf23241715e8a0f20e307ddcdc))
+* **operator:** networkpolicies allow access through proxy port when a proxy is configured ([#20194](https://github.com/grafana/loki/issues/20194)) ([ef15181](https://github.com/grafana/loki/commit/ef151816d772395ef61644e2dc66971342cb6b51))
+* **operator:** set ingester minimum available pods based on replication factor ([#19517](https://github.com/grafana/loki/issues/19517)) ([efc63e8](https://github.com/grafana/loki/commit/efc63e8d06fd2680a8af009f45b07eb2d3eb45d5))
+* **operator:** Update maximum OpenShift version ([#20600](https://github.com/grafana/loki/issues/20600)) ([fce93a8](https://github.com/grafana/loki/commit/fce93a8ad59182ae8e6a13c59f69be5ca2fae808))
+
+
+### Performance Improvements
+
+* **operator:** simplification to status validation ([#20725](https://github.com/grafana/loki/issues/20725)) ([834cf12](https://github.com/grafana/loki/commit/834cf12155c2ec6ab9231c12af7c7dc33c8b7728))
+
 ## [0.9.0](https://github.com/grafana/loki/compare/operator/v0.8.0...operator/v0.9.0) (2025-12-04)
 
 
